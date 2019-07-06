@@ -1,60 +1,67 @@
-# Maintainer: Michele Cereda <cereda.michele@gmail.com>
-# Contributor: JokerYu <dayushinn@gmail.com>, Olivier Bilodeau <obilodeau@gosecure.ca>
-pkgname=forticlientsslvpn
-pkgver=4.4.2329
-pkgrel=1
-epoch=1
-pkgdesc="Fortinet SSL VPN Client for linux"
+# Contributor: David Birks <david@tellus.space>
+# Contributor: Michele Cereda <cereda.michele@gmail.com>
+# Contributor: JokerYu <dayushinn@gmail.com>
+# Contributor: Olivier Bilodeau <obilodeau@gosecure.ca>
+
+pkgname="forticlientsslvpn"
+pkgver="4.4.2336"
+pkgrel="1"
+pkgdesc="Fortinet's SSLVPN Client for linux"
 arch=("i686" "x86_64")
+install="${pkgname}.install"
+
 url="https://support.fortinet.com"
-license=("custom")
-depends=("ppp" "net-tools" "libsm" "gtk2")
-optdepends=("gtk-engines: for gtk theme support")
+license=("custom:FortiClientSSLVPN")
 
-_sourceName=${pkgname}_linux_${pkgver}.tar.gz
-
-if [ "$CARCH" = "i686" ]; then
-  _arch=32bit
-elif [ "$CARCH" = "x86_64" ]; then
-  _arch=64bit
-fi
-
-sha256sums=('95bb2148130c0eaf51353f4adc9da5032c06af3a5ea8e44c06d0e06439afc635'
-            '5742a8ae7dde1a1fde698ce2108ade9b51d497579c1e4375ff928325112a8780'
-            '18061ae130992bfdd1b2fc18b2a6cd64e9ee6da63dae28cee1c28f2a40b60b15'
-            '4f63f4503dca7633a4d7a1cf874ede1f33f877a701813349c5cd63889151f4a2'
-            '15d46db76a39f32736ee3a469fc1b821e6290453c701af823875a493d06901df')
-
-_tarballsrc="https://github.com/mcereda/forticlientsslvpn/raw/master/tarball/${_sourceName}"
-# from Fortinet's firmware download site: /FortiGate/v5.00/5.2/5.2.7/VPN/SSLVPNTools/${_sourceName}
-
-source=(
-  "${_tarballsrc}"
-  "${pkgname}.sh"
-  "${pkgname}_cli.sh"
-  "${pkgname}.desktop"
-  "${pkgname}.png"
+depends=(
+	"gtk2"
+	"libsm"
+	"net-tools"
+	"ppp"
+)
+optdepends=(
+	"gtk-engines: for gtk theme support"
+	"gnome-themes-standard: for theming"
 )
 
+source=(
+	"https://github.com/machtelik/forticlientsslvpn/raw/master/tarball/${pkgname}_linux_${pkgver}.tar.gz"
+	"${pkgname}.desktop"
+	"${pkgname}.png"
+	"${pkgname}.sh"
+	"${pkgname}_cli.sh"
+)
+sha256sums=('f76ec487ac29f91fe920f7f344ca9f886646100ace88a76f49a4116fe7d127cc'
+            '4f63f4503dca7633a4d7a1cf874ede1f33f877a701813349c5cd63889151f4a2'
+            '15d46db76a39f32736ee3a469fc1b821e6290453c701af823875a493d06901df'
+            '5d4737629cadf38194ffc68d927a202cbac5f9fbcf825f11407c00e6a15842fb'
+            '92f0dcc5431221d6832220b3ddec8d9606fff9ded4f8590eabd1c9ff3e37cb8b')
+
+if   [ "$CARCH" = "i686"   ]; then _arch="32bit"
+elif [ "$CARCH" = "x86_64" ]; then _arch="64bit"
+fi
+options=( !strip )
+
 package() {
-  _srcpath=${srcdir}/${pkgname}/${_arch}
+	msg "Creating folders..."
+	mkdir -p ${pkgdir}/opt/fortinet/${pkgname}/icons
+	mkdir -p ${pkgdir}/usr/bin
+	mkdir -p ${pkgdir}/usr/share/applications
+	mkdir -p ${pkgdir}/usr/share/licenses/${pkgname}
 
-  cd ${_srcpath}/helper
+	msg "Copying files..."
+	cp -rp ${srcdir}/${pkgname}/${_arch}/* ${pkgdir}/opt/fortinet/${pkgname}
 
-  msg "creating path and copying files..."
+	msg "Setting acceptable permissions..."
+	chmod 555 ${pkgdir}/opt/fortinet/${pkgname}/helper
 
-  mkdir -p ${pkgdir}/opt/fortinet/${pkgname}/icons
-  mkdir -p ${pkgdir}/usr/bin
-  mkdir -p ${pkgdir}/usr/share/applications
-  mkdir -p ${pkgdir}/usr/share/licenses/${pkgname}
-
-  cp -rp ${_srcpath}/* ${pkgdir}/opt/fortinet/${pkgname}
-
-  chmod 555 ${pkgdir}/opt/fortinet/${pkgname}/helper
-
-  install -Dm 644 ${srcdir}/${pkgname}.png ${pkgdir}/opt/fortinet/${pkgname}/icons/
-  install -Dm 644 ${srcdir}/${pkgname}.desktop ${pkgdir}/usr/share/applications/
-  install -Dm 644 ${_srcpath}/helper/License.txt ${pkgdir}/usr/share/licenses/${pkgname}/
-  install -Dm 755 ${srcdir}/${pkgname}.sh ${pkgdir}/usr/bin/${pkgname}
-  install -Dm 755 ${srcdir}/${pkgname}_cli.sh ${pkgdir}/usr/bin/${pkgname}_cli
+	msg "Installing files..."
+	install -Dm 644 ${srcdir}/${pkgname}.png ${pkgdir}/opt/fortinet/${pkgname}/icons/
+	install -Dm 644 ${srcdir}/${pkgname}.desktop ${pkgdir}/usr/share/applications/
+	install -Dm 644 ${srcdir}/${pkgname}/${_arch}/helper/License.txt ${pkgdir}/usr/share/licenses/${pkgname}/
+	
+	msg "Installing launchers"
+	# needed by the program since it checks that the executable is launched from /opt/fortinet/forticlientsslvpn/
+	install -Dm 755 ${srcdir}/${pkgname}.sh ${pkgdir}/usr/bin/${pkgname}
+	install -Dm 755 ${srcdir}/${pkgname}_cli.sh ${pkgdir}/usr/bin/${pkgname}_cli
 }
